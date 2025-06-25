@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Kuis IPA SMP Kualifikasi Mahluk Hidup dan Materi</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+    }
+    .question {
+      margin-bottom: 20px;
+    }
+    .hidden {
+      display: none;
+    }
+    input[type="text"] {
+      width: 300px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    #timer {
+      font-weight: bold;
+      color: red;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Kuis IPA SMP</h2>
+  <h2>By: Torus Manuntun Nababan, M.Pd</h2>
+  <h2>Materi: Kualifikasi Mahluk Hidup dan Materi</h2>
+  <!-- Form Identitas -->
+  <div id="identityForm">
+    <h3>Silakan isi identitas terlebih dahulu:</h3>
+    <label>Nama:
+      <input type="text" id="nama" required>
+    </label>
+    <label>Kelas:
+      <input type="text" id="kelas" required>
+    </label>
+    <label>Tahun Ajaran:
+      <input type="text" id="tahun" required>
+    </label>
+    <label>Nama Sekolah:
+      <input type="text" id="sekolah" required>
+    </label>
+    <button onclick="startQuiz()">Mulai Kuis</button>
+  </div>
+
+  <!-- Timer -->
+  <div id="timer" class="hidden"></div>
+
+  <!-- Form Soal -->
+  <form id="quizForm" class="hidden">
+    <div id="questionsContainer"></div>
+    <button type="button" onclick="submitQuiz()">Selesai dan Lihat Skor</button>
+  </form>
+
+  <div id="result" class="hidden"></div>
+
+  <script>
+    const questions = [
+      { question: "1. Ilmu yang mempelajari pengelompokan makhluk hidup disebut...", options: ["Ekologi", "Taksonomi", "Biologi", "Zoologi"], answer: "Taksonomi" },
+    { question: "2. Tujuan klasifikasi makhluk hidup adalah...", options: ["Menambah populasi", "Membuat nama ilmiah", "Memudahkan mengenal makhluk hidup", "Menjaga kelestarian lingkungan"], answer: "Memudahkan mengenal makhluk hidup" },
+    { question: "3. Urutan takson dari yang tertinggi ke terendah adalah...", options: ["Genus - Spesies - Ordo - Kelas", "Kingdom - Kelas - Ordo - Spesies", "Spesies - Kingdom - Kelas - Ordo", "Kelas - Ordo - Famili - Kingdom"], answer: "Kingdom - Kelas - Ordo - Spesies" },
+    { question: "4. Contoh nama ilmiah yang benar menurut aturan binomial nomenklatur adalah...", options: ["Felis catus", "felis Catus", "Felis Catus", "FELIS CATUS"], answer: "Felis catus" },
+    { question: "5. Organisme bersel satu dan tidak memiliki membran inti termasuk dalam kingdom...", options: ["Fungi", "Protista", "Monera", "Plantae"], answer: "Monera" },
+    { question: "6. Jamur termasuk dalam kingdom...", options: ["Animalia", "Plantae", "Fungi", "Monera"], answer: "Fungi" },
+    { question: "7. Hewan yang memiliki tulang belakang disebut...", options: ["Invertebrata", "Vertebrata", "Amfibi", "Reptil"], answer: "Vertebrata" },
+    { question: "8. Contoh hewan invertebrata adalah...", options: ["Ikan", "Burung", "Cacing tanah", "Kucing"], answer: "Cacing tanah" },
+    { question: "9. Ciri utama tumbuhan adalah...", options: ["Tidak bisa bergerak", "Berklorofil dan autotrof", "Memiliki kaki", "Memiliki sistem saraf"], answer: "Berklorofil dan autotrof" },
+    { question: "10. Materi adalah...", options: ["Segala sesuatu yang dapat dilihat", "Segala sesuatu yang mempunyai massa dan menempati ruang", "Benda yang dapat dipegang", "Benda padat dan cair saja"], answer: "Segala sesuatu yang mempunyai massa dan menempati ruang" },
+    { question: "11. Contoh perubahan fisika adalah...", options: ["Kertas dibakar", "Air menguap", "Makanan basi", "Susu menjadi asam"], answer: "Air menguap" },
+    { question: "12. Contoh perubahan kimia adalah...", options: ["Es mencair", "Air mendidih", "Kayu dibakar", "Air membeku"], answer: "Kayu dibakar" },
+    { question: "13. Campuran yang tidak dapat dibedakan komponennya dengan mata disebut...", options: ["Larutan", "Suspensi", "Emulsi", "Campuran kasar"], answer: "Larutan" },
+    { question: "14. Air gula merupakan contoh campuran jenis...", options: ["Suspensi", "Larutan", "Koloid", "Gas"], answer: "Larutan" },
+    { question: "15. Zat tunggal terdiri dari...", options: ["Campuran dan larutan", "Unsur dan senyawa", "Unsur dan campuran", "Senyawa dan suspensi"], answer: "Unsur dan senyawa" },
+    { question: "16. Contoh unsur adalah...", options: ["Air", "Garam", "Oksigen", "Gula"], answer: "Oksigen" },
+    { question: "17. Contoh senyawa adalah...", options: ["Air", "Oksigen", "Besi", "Karbon"], answer: "Air" },
+    { question: "18. Wujud zat yang bentuk dan volumenya tetap adalah...", options: ["Padat", "Cair", "Gas", "Plasma"], answer: "Padat" },
+    { question: "19. Perubahan wujud dari gas menjadi cair disebut...", options: ["Menguap", "Membeku", "Membasahi", "Mengembun"], answer: "Mengembun" },
+    { question: "20. Sifat zat yang dapat diukur dengan alat ukur disebut sifat...", options: ["Kimia", "Subjektif", "Fisik", "Optik"], answer: "Fisik" }
+  ];
+
+    let quizTimer;
+    let countdownInterval;
+    const timeLimit = 20 * 60 * 1000; // 20 menit
+
+    function startQuiz() {
+      const nama = document.getElementById('nama').value;
+      const kelas = document.getElementById('kelas').value;
+      const tahun = document.getElementById('tahun').value;
+      const sekolah = document.getElementById('sekolah').value;
+
+      if (!nama || !kelas || !tahun || !sekolah) {
+        alert("Harap lengkapi semua data identitas.");
+        return;
+      }
+
+      document.getElementById('identityForm').classList.add('hidden');
+      document.getElementById('quizForm').classList.remove('hidden');
+      document.getElementById('timer').classList.remove('hidden');
+
+      const container = document.getElementById('questionsContainer');
+      container.innerHTML = "";
+      questions.forEach((q, index) => {
+        const div = document.createElement('div');
+        div.classList.add('question');
+        div.innerHTML = `<p>${q.question}</p>` + q.options.map(opt => `
+          <label><input type="radio" name="q${index}" value="${opt}"> ${opt}</label><br>`).join('');
+        container.appendChild(div);
+      });
+
+      // Timer otomatis submit setelah 20 menit
+      quizTimer = setTimeout(() => {
+        alert("Waktu habis! Kuis akan otomatis disubmit.");
+        submitQuiz();
+      }, timeLimit);
+
+      // Countdown display
+      let remaining = timeLimit / 1000;
+      const timerDisplay = document.getElementById('timer');
+      timerDisplay.textContent = `Sisa waktu: ${remaining} detik`;
+      countdownInterval = setInterval(() => {
+        remaining--;
+        timerDisplay.textContent = `Sisa waktu: ${remaining} detik`;
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+        }
+      }, 1000);
+    }
+
+    function submitQuiz() {
+      clearTimeout(quizTimer);
+      clearInterval(countdownInterval);
+
+      let score = 0;
+      questions.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if (selected && selected.value === q.answer) {
+          score += 10;
+        }
+      });
+
+      document.getElementById('quizForm').classList.add('hidden');
+      document.getElementById('timer').classList.add('hidden');
+      const resultDiv = document.getElementById('result');
+      resultDiv.classList.remove('hidden');
+
+      const nama = document.getElementById('nama').value;
+      const kelas = document.getElementById('kelas').value;
+      const tahun = document.getElementById('tahun').value;
+      const sekolah = document.getElementById('sekolah').value;
+
+      let message = "";
+      if (score >= 70) {
+        message = "<p style='color: green;'><strong>Selamat!</strong> Anda Sudah Bisa Melanjutkan ke Materi Berikutnya.</p>";
+      } else {
+        message = "<p style='color: red;'><strong>Mohon maaf.</strong> Silakan pelajari kembali materi ini sebelum melanjutkan ke materi berikutnya.</p>";
+      }
+
+      resultDiv.innerHTML = `
+        <h3>Hasil Kuis</h3>
+        <p><strong>Nama:</strong> ${nama}</p>
+        <p><strong>Kelas:</strong> ${kelas}</p>
+        <p><strong>Tahun Ajaran:</strong> ${tahun}</p>
+        <p><strong>Sekolah:</strong> ${sekolah}</p>
+        <p><strong>Skor Anda:</strong> ${score} dari 200</p>
+        ${message}
+      `;
+    }
+  </script>
+</body>
+</html>
